@@ -145,8 +145,10 @@ try {
                         }
                     }
 
-                    $manEntry = $dst.CreateEntry($manifestName, [System.IO.Compression.CompressionLevel]::NoCompression)
-                    Set-EntryCompressionMethod $manEntry 0
+                    # Use Deflate, not STORED. .NET ZipArchive NoCompression still writes a
+                    # Deflate wrapper, so forcing method 0 makes compressed_size > uncompressed
+                    # and jarsigner fails with "attempt to write past end of STORED entry".
+                    $manEntry = $dst.CreateEntry($manifestName, [System.IO.Compression.CompressionLevel]::Fastest)
                     $manIn = [System.IO.File]::OpenRead($ManifestPath)
                     try {
                         $manOut = $manEntry.Open()
